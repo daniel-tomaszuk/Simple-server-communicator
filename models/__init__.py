@@ -226,7 +226,7 @@ class Message(object):
         if self.__id == -1:
             # saving new instance (new_message) using prepared statements
             sql = """
-                  INSERT INTO Comunicates(sender_id, reciver_id,communicate)
+                  INSERT INTO Comunicates(sender_id, reciver_id, communicate)
                   VALUES ({}, {}, "{}")
                   """.format(self.u_from, self.u_to, self.text)
             

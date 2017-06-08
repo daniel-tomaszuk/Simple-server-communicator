@@ -11,9 +11,12 @@ import random
 import string
 
 def log_in(args):
-    # try to log in    
+    # try to log in and get password   
     if args.password:
         password = getpass("User: {}, password: ".format(args.user))
+    else:
+        # if no password given
+        return False
   
     if (len(password) >= 8):
         # connect into DB
@@ -38,25 +41,18 @@ def log_in(args):
                 # wrong pass - log in failed
                 return False            
             counter+=1
-            # if whole DB was checked with no match - set flag db_checked, create new user
+            # if whole DB was checked with no match create new user
             if counter == len(gg_users):
-                db_checked = True            
-                    
-        if db_checked:
-            new_gg_user = User()
-            new_gg_user.email = args.user
-            new_gg_user.hashed_password = password_hash(password)
-            # allow user to choose his username
-            new_gg_user.username = input("Creating new user.\nWrite your username: ")            
-            new_gg_user.save_to_db(cursor)
-            print("New user made..")
-            disconnect_db(cursor, cnx)
-            # new user and logged in
-            return new_gg_user.id
-        else:
-            print("Error while checking DB..")
-            disconnect_db(cursor, cnx)
-            return False
+                new_gg_user = User()
+                new_gg_user.email = args.user
+                new_gg_user.hashed_password = password_hash(password)
+                # allow user to choose his username
+                new_gg_user.username = input("Creating new user.\nWrite your username: ")            
+                new_gg_user.save_to_db(cursor)
+                print("New user made..")
+                disconnect_db(cursor, cnx)
+                # new user and logged in
+                return new_gg_user.id
             
     else:
         print ("Password too short..")
@@ -67,7 +63,11 @@ def log_in(args):
 
 def new_pass(args):
     # set new pass only if proper -u and -p were given as well as -n 
-    log_in_result = log_in(args)   
+    log_in_result = log_in(args)  
+
+
+    
+     
     if log_in_result != False and args.new_pass:
             new_pass = getpass("Set new password: ")  
             if len(new_pass) >= 8:
@@ -87,7 +87,9 @@ def new_pass(args):
             else:
                 print("Password too short..")
                 return False
-
+    else:
+        print ("Failed to log in..")
+        return False
         
 
 
@@ -107,6 +109,10 @@ def delete(args):
             print("Deletion cancelled..")
             disconnect_db(cursor,cnx)
             return False
+    else:
+        print ("Failed to log in..")
+        return False    
+        
 
 def list(args):
     log_in_result = log_in(args)
@@ -122,9 +128,9 @@ def list(args):
         disconnect_db(cursor,cnx)   
         return True
     else:
-        print("Error..")
-        disconnect_db(cursor,cnx)
+        print ("Failed to log in..")
         return False
+    
 
 def edit(args):
     log_in_result = log_in(args)
@@ -145,22 +151,58 @@ def edit(args):
                 print ("There is such email already in DB. Exiting..")
                 disconnect_db(cursor, cnx) 
                 return False
+            counter+=1
+            # if whole DB was checked with no match save new username and email
+            if counter == len(gg_users):
+                user.username = new_username
+                user.email = new_email
+                # update new password in DB
+                sql = """UPDATE Users SET username = '{}', email = '{}'
+                         WHERE id = {}""".format(user.username, user.email, user.id)            
+                cursor.execute(sql)
+                disconnect_db(cursor,cnx)
+                print ("New username and email set!")    
+                return True            
+    else:
+        print ("Failed to log in..")
+        return False
+
+
+def send_to(args):
+    log_in_result = log_in(args)
+    if log_in_result != False and args.send_to:    
+        cnx = connect_db()        
+        cnx.autocommit = True
+        cursor = cnx.cursor()
+        
+        to_user = input("Write an email of the user that you want to send message to: ")
+        
+        
+        # look for a user with given email
+        gg_users = User.load_all_users(cursor)        
+        db_checked = False
+        counter = 0
+        for gg_user in gg_users:
+            # if there is such user in DB
+            if to_user == gg_user.email:
+                message_to_send = input("Write message to the user: ")
+                new_message = Message()
+                new_message.text = message_to_send
+                new_message.u_from = log_in_result
+                new_message.u_to = gg_user.id 
+                new_message.save_to_db(cursor)
+                disconnect_db(cursor,cnx)
+                print("Message send..")
+                return True
             
             counter+=1
-            # if whole DB was checked with no match - set flag db_checked, save new username and email
+            # if whole DB was checked with no match
             if counter == len(gg_users):
-                db_checked = True
-
-        if db_checked == True:
-            user.username = new_username
-            user.email = new_email
-            # update new password in DB
-            sql = """UPDATE Users SET username = '{}', email = '{}'
-                     WHERE id = {}""".format(user.username, user.email, user.id)            
-            cursor.execute(sql)
-            disconnect_db(cursor,cnx)
-            print ("New username and email set!")    
-            return True
+                print("There is no user with given email..")
+                return False 
+    else:
+        print ("Failed to log in..")
+        return False
 
 
 
@@ -169,7 +211,8 @@ def edit(args):
 
 
 
-        
+
+
 
 def main():    
     parser = argparse.ArgumentParser(description="Simple server communicator via SQL base.")
@@ -189,17 +232,16 @@ def main():
     group2.add_argument('-n', '--new-pass', action='store_true', dest='new_pass', 
                         help="sets new password while logging")
     
-    
-
-     
+         
 
     group2.add_argument("-l","--list", action="store_true", help="list all users")
     group2.add_argument("-d","--delete", action="store_true", help="delete logged user")
     group2.add_argument("-e","--edit", action="store_true", help="edit user email")
     
-    group2.add_argument("-t","--to", help="to whom send your message")
-    group2.add_argument("-s","--send", action="store_true", help="send message")
+#     group2.add_argument("-t","--to", help="to whom send your message")
+#     group2.add_argument("-s","--send", action="store_true", help="send message")
     
+    group2.add_argument("-st","--send_to", action="store_true", help="Send message To..")
     
     
     group.add_argument("-v", "--verbose", action="store_true", help = "more verbose output")
@@ -212,11 +254,10 @@ def main():
     
 #     args_g2 = group2.parse_args()
 #     help = parser.print_help()
-        
-        
-    print(args.list)
-    # only log in  
-    if (args.new_pass == False) and (args.delete == False) and (args.list == False) and (args.edit == False):
+            
+
+    # only log in or create new user 
+    if (args.new_pass == False) and (args.delete == False) and (args.list == False) and (args.edit == False) and (args.send_to == False):
         log_in(args)
     elif (args.new_pass):
         new_pass(args)        
@@ -228,7 +269,18 @@ def main():
         list(args)
     # edit user
     elif args.edit:
-        edit(args)
+        edit(args)        
+    elif args.send_to:
+        send_to(args)
+    else:
+      print(parser.print_help()) 
+        
+        
+    
+        
+        
+        
+        
        
     
 
