@@ -108,9 +108,12 @@ def delete(args):
             disconnect_db(cursor,cnx)
             return False
 
-        
-        
-        
+def list(args, args):
+    log_in_result = log_in(args)
+    if log_in_result != False and args.delete: 
+        pass
+
+
         
 
 def main():
@@ -118,6 +121,7 @@ def main():
     parser = argparse.ArgumentParser(description="Simple server communicator via SQL base.")
     # prevents from using -v and -q at the same time
     group = parser.add_mutually_exclusive_group()
+    group2 = parser.add_mutually_exclusive_group()
     
     # while logging
     parser.add_argument("-u","--user", help="user login, email in DB")
@@ -128,34 +132,46 @@ def main():
     
     
     # parser.add_argument("-n","--new-pass", help="sets new password while logging")
-    parser.add_argument('-n', '--new-pass', action='store_true', dest='new_pass', 
+    group2.add_argument('-n', '--new-pass', action='store_true', dest='new_pass', 
                         help="sets new password while logging")
     
     
-    
+
      
-    # after succesful log
-    parser.add_argument("-l","--list", action="store_true", help="list all user emails")
-    parser.add_argument("-d","--delete", action="store_true", help="delete logged user")
-    parser.add_argument("-e","--edit", action="store_true", help="edit user email")
+
+    group2.add_argument("-l","--list", action="store_true", help="list all users")
+    group2.add_argument("-d","--delete", action="store_true", help="delete logged user")
+    group2.add_argument("-e","--edit", action="store_true", help="edit user email")
+    
+    group2.add_argument("-t","--to", help="to whom send your message")
+    group2.add_argument("-s","--send", action="store_true", help="send message")
+    
     
     
     group.add_argument("-v", "--verbose", action="store_true", help = "more verbose output")
     group.add_argument("-q", "--quiet", action="store_true", help = "stays quiet")
+    
     parser.add_argument("--quit", action="store_false", help="closes the program")
         
+                
     args = parser.parse_args()
+    
+#     args_g2 = group2.parse_args()
 #     help = parser.print_help()
         
     
     # log in, create new user, delete user  
-    if (args.user is not None) and (args.new_pass == False) and (args.delete == False):
+    if (args.new_pass == False) and (args.delete == False):
         log_in(args)
-    elif (args.user) and (args.new_pass):
+    elif (args.new_pass):
         new_pass(args)        
     #delete user after loggin in    
-    elif (args.user) and (args.delete):
+    elif (args.delete):
         delete(args)
+    elif args.list:
+        list(args)
+    
+      
     
 
 if __name__ == "__main__":
