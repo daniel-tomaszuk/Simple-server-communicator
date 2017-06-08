@@ -205,11 +205,33 @@ def send_to(args):
         return False
 
 
-
-
-
-
-
+def list_messages(args):
+    log_in_result = log_in(args)
+    if log_in_result != False and args.list_messages:
+        cnx = connect_db()        
+        cnx.autocommit = True
+        cursor = cnx.cursor()    
+        
+        messages = Message.load_all_message_for_user(cursor, log_in_result)
+        
+        for message in messages:
+            u_from = message.u_from
+            u_to = message.u_to 
+            text = message.text
+            date = message.creation_date
+            # load user emails form db
+            u_db_from = User.load_by_id(u_from, cursor)
+            u_db_to = User.load_by_id(u_to, cursor)
+            print(u_db_from.email, " -> ", u_db_to.email)
+            print(date)
+            print(text)
+        disconnect_db(cursor,cnx)
+        return True
+            
+    else:
+        print ("Failed to log in..")
+        return False
+            
 
 
 
@@ -235,6 +257,7 @@ def main():
          
 
     group2.add_argument("-l","--list", action="store_true", help="list all users")
+    group2.add_argument("-lm","--list_messages", action="store_true", help="list all messages for logged user")
     group2.add_argument("-d","--delete", action="store_true", help="delete logged user")
     group2.add_argument("-e","--edit", action="store_true", help="edit user email")
     
@@ -257,7 +280,7 @@ def main():
             
 
     # only log in or create new user 
-    if (args.new_pass == False) and (args.delete == False) and (args.list == False) and (args.edit == False) and (args.send_to == False):
+    if (args.new_pass == False) and (args.delete == False) and (args.list == False) and (args.edit == False) and (args.send_to == False) and (args.list_messages == False):
         log_in(args)
     elif (args.new_pass):
         new_pass(args)        
@@ -272,6 +295,8 @@ def main():
         edit(args)        
     elif args.send_to:
         send_to(args)
+    elif args.list_messages:
+        list_messages(args)
     else:
       print(parser.print_help()) 
         
