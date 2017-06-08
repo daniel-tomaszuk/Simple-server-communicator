@@ -126,6 +126,49 @@ def list(args):
         disconnect_db(cursor,cnx)
         return False
 
+def edit(args):
+    log_in_result = log_in(args)
+    if log_in_result != False and args.edit: 
+        cnx = connect_db()        
+        cnx.autocommit = True
+        cursor = cnx.cursor()
+        user = User.load_by_id(log_in_result, cursor)
+        new_username = input("New username:")
+        new_email = input("New email:")
+        
+        # check all db if there is no same email as given by the user
+        gg_users = User.load_all_users(cursor)        
+        db_checked = False
+        counter = 0
+        for gg_user in gg_users:
+            if new_email == gg_user.email:
+                print ("There is such email already in DB. Exiting..")
+                disconnect_db(cursor, cnx) 
+                return False
+            
+            counter+=1
+            # if whole DB was checked with no match - set flag db_checked, save new username and email
+            if counter == len(gg_users):
+                db_checked = True
+
+        if db_checked == True:
+            user.username = new_username
+            user.email = new_email
+            # update new password in DB
+            sql = """UPDATE Users SET username = '{}', email = '{}'
+                     WHERE id = {}""".format(user.username, user.email, user.id)            
+            cursor.execute(sql)
+            disconnect_db(cursor,cnx)
+            print ("New username and email set!")    
+            return True
+
+
+
+
+
+
+
+
         
 
 def main():    
@@ -172,17 +215,20 @@ def main():
         
         
     print(args.list)
-    # log in, create new user, delete user  
-    if (args.new_pass == False) and (args.delete == False) and (args.list == False):
+    # only log in  
+    if (args.new_pass == False) and (args.delete == False) and (args.list == False) and (args.edit == False):
         log_in(args)
     elif (args.new_pass):
         new_pass(args)        
-    # delete user after loggin in    
+    # delete user    
     elif (args.delete):
         delete(args)
     # list all users
     elif args.list:
         list(args)
+    # edit user
+    elif args.edit:
+        edit(args)
        
     
 
