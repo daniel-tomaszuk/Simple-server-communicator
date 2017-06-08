@@ -41,19 +41,23 @@ def log_in(args):
             # if whole DB was checked with no match - set flag db_checked, create new user
             if counter == len(gg_users):
                 db_checked = True            
-         
-           
+                    
         if db_checked:
             new_gg_user = User()
             new_gg_user.email = args.user
             new_gg_user.hashed_password = password_hash(password)
             # allow user to choose his username
-            new_gg_user.username = input("Creating new user.\n Write your username: ")            
+            new_gg_user.username = input("Creating new user.\nWrite your username: ")            
             new_gg_user.save_to_db(cursor)
             print("New user made..")
             disconnect_db(cursor, cnx)
             # new user and logged in
             return new_gg_user.id
+        else:
+            print("Error while checking DB..")
+            disconnect_db(cursor, cnx)
+            return False
+            
     else:
         print ("Password too short..")
         disconnect_db(cursor, cnx)
@@ -78,18 +82,36 @@ def new_pass(args):
                          WHERE id = {}""".format(user.hashed_password, user.id)            
                 cursor.execute(sql)
                 disconnect_db(cursor,cnx)
-                print(user.email)              
                 print ("New password set!")
-                return user.id
+                return True
             else:
                 print("Password too short..")
                 return False
 
-# def delete(args):
-#     log_in_result = log_in(args)
-#     if log_in_result != False and args.new_pass: 
+        
 
 
+def delete(args):
+    log_in_result = log_in(args)
+    if log_in_result != False and args.delete: 
+        cnx = connect_db()        
+        cnx.autocommit = True
+        cursor = cnx.cursor()        
+        user = User.load_by_id(log_in_result, cursor)
+        in_del = input("Do you want to delete user {}? y/n ".format(user.username))
+        if in_del.lower() == 'y':
+            user.delete(cursor)
+            disconnect_db(cursor,cnx)
+            return True
+        else:
+            print("Deletion cancelled..")
+            disconnect_db(cursor,cnx)
+            return False
+
+        
+        
+        
+        
 
 def main():
     
@@ -123,16 +145,17 @@ def main():
     parser.add_argument("--quit", action="store_false", help="closes the program")
         
     args = parser.parse_args()
+#     help = parser.print_help()
+        
     
-    
-    # log in or create new user   
-    if (args.user is not None) and (args.new_pass is None):
+    # log in, create new user, delete user  
+    if (args.user is not None) and (args.new_pass == False) and (args.delete == False):
         log_in(args)
-    elif (args.user is not None) and (args.new_pass is not None):
-        new_pass(args)
-    # delete user after loggin in
-#     if (args.user is not None) and (args.delete is not None):
-    
+    elif (args.user) and (args.new_pass):
+        new_pass(args)        
+    #delete user after loggin in    
+    elif (args.user) and (args.delete):
+        delete(args)
     
 
 if __name__ == "__main__":

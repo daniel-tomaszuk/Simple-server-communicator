@@ -103,7 +103,7 @@ class User(object):
             sql = """
                   INSERT INTO Users (username, email, hashed_password)
                   VALUES ('{}','{}','{}')
-                  """.format(self.username, self.email, self.hashed_password())
+                  """.format(self.username, self.email, self.hashed_password)
             
             cursor.execute(sql)
             # User instance id as last used row in DB
@@ -115,7 +115,7 @@ class User(object):
             sql = """UPDATE Users SET username = '{}', email = '{}',  hashed_password = '{}'
                    WHERE id = {}""".format(self.username,
                                            self.email, 
-                                           self.hashed_password(), 
+                                           self.hashed_password, 
                                            self.id)
             cursor.execute(sql)  
             print ("Updated..")
