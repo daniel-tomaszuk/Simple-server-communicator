@@ -108,16 +108,27 @@ def delete(args):
             disconnect_db(cursor,cnx)
             return False
 
-def list(args, args):
+def list(args):
     log_in_result = log_in(args)
-    if log_in_result != False and args.delete: 
-        pass
-
+    if log_in_result != False and args.list: 
+        cnx = connect_db()        
+        cnx.autocommit = True
+        cursor = cnx.cursor() 
+        gg_users = User.load_all_users(cursor)
+        print("All users:")
+        # print all users
+        for gg_user in gg_users:            
+            print(gg_user.id,gg_user.email, gg_user.username) 
+        disconnect_db(cursor,cnx)   
+        return True
+    else:
+        print("Error..")
+        disconnect_db(cursor,cnx)
+        return False
 
         
 
-def main():
-    
+def main():    
     parser = argparse.ArgumentParser(description="Simple server communicator via SQL base.")
     # prevents from using -v and -q at the same time
     group = parser.add_mutually_exclusive_group()
@@ -159,19 +170,20 @@ def main():
 #     args_g2 = group2.parse_args()
 #     help = parser.print_help()
         
-    
+        
+    print(args.list)
     # log in, create new user, delete user  
-    if (args.new_pass == False) and (args.delete == False):
+    if (args.new_pass == False) and (args.delete == False) and (args.list == False):
         log_in(args)
     elif (args.new_pass):
         new_pass(args)        
-    #delete user after loggin in    
+    # delete user after loggin in    
     elif (args.delete):
         delete(args)
+    # list all users
     elif args.list:
         list(args)
-    
-      
+       
     
 
 if __name__ == "__main__":
