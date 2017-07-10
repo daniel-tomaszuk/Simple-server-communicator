@@ -8,15 +8,15 @@ usage: gg.py [-h] [-u USER] [-p] [-n | -l | -lm | -d | -e | -st] -v | -q]
 Simple server communicator via SQL base.
 
 1. Optional arguments:
-⋅⋅*  -h, --help            show this help message and exit
-⋅⋅* -u USER, --user USER  user login, email in DB
-⋅⋅*  -p, --password        hidden password prompt
-⋅⋅*  -n, --new-pass        sets new password while logging
-⋅⋅*  -l, --list            list all users
-⋅⋅*  -lm, --list_messages  list all messages for logged user
-⋅⋅*  -d, --delete          delete logged user
-⋅⋅*  -e, --edit            edit user email
-⋅⋅*  -st, --send_to        Send message To..
-⋅⋅*  -v, --verbose         more verbose output
-⋅⋅* -q, --quiet           stays quiet
-⋅⋅*  --quit                closes the program
+⋅⋅*  -h, --help            show this help message and exit<br />
+⋅⋅* -u USER, --user USER  user login, email in DB<br />
+⋅⋅*  -p, --password        hidden password prompt<br />
+⋅⋅*  -n, --new-pass        sets new password while logging<br />
+⋅⋅*  -l, --list            list all users<br />
+⋅⋅*  -lm, --list_messages  list all messages for logged user<br />
+⋅⋅*  -d, --delete          delete logged user<br />
+⋅⋅*  -e, --edit            edit user email<br />
+⋅⋅*  -st, --send_to        Send message To..<br />
+⋅⋅*  -v, --verbose         more verbose output<br />
+⋅⋅* -q, --quiet            stays quiet<br />
+⋅⋅*  --quit                closes the program<br />
